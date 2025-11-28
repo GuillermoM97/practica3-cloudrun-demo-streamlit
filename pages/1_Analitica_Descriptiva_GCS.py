@@ -9,7 +9,7 @@ st.title("Analítica Descriptiva desde GCS (Altair)")
 # --------------------------------------------
 # Parámetros de conexión
 # --------------------------------------------
-bucket = st.text_input("Bucket de GCS:", "bucket_131025")
+bucket = st.text_input("Bucket de GCS:", "mi_bucket_cloudcomp_30_oct_2025")
 prefix = st.text_input("Prefijo:", "tlc_yellow_trips_2022/")
 
 # --------------------------------------------
