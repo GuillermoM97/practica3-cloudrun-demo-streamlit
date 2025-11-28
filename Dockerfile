@@ -11,27 +11,38 @@
 
 # Use the official lightweight Python image.
 # https://hub.docker.com/_/python
-FROM python:3.13.5-slim
+# Use a stable, widely supported Python version
+FROM python:3.11-slim
 
-# Allow statements and log messages to immediately appear in the Cloud Run logs
-ENV PYTHONUNBUFFERED 1
+# Ensure logs are flushed straight away and no .pyc files
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
-# Create and change to the app directory.
+# Install build tools and common native libs for Python packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    libpq-dev \
+    libffi-dev \
+    libssl-dev \
+    libjpeg-dev \
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip & build tooling
+RUN pip install --upgrade pip setuptools wheel
+
+# Create and change to the app directory
 WORKDIR /usr/src/app
 
 # Copy application dependency manifests to the container image.
-# Copying this separately prevents re-running pip install on every code change.
 COPY requirements.txt ./
 
-# Install dependencies.
-RUN pip install -r requirements.txt
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy local code to the container image.
-COPY . ./
+COPY . .
 
 # Run the web service on container startup.
-# Use gunicorn webserver with one worker process and 8 threads.
-# For environments with multiple CPU cores, increase the number of workers
-# to be equal to the cores available.
-# Timeout is set to 0 to disable the timeouts of the workers to allow Cloud Run to handle instance scaling.
 CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 app:app
